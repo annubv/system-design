@@ -1,13 +1,13 @@
 # TINY URL
 
-## Why do we need it?
+## 1. WHY DO WE NEED IT?
 
 - Saves space while storing the URLs
 - Hides original URL for privacy
 - Easy to remember/less error-prone while using the shortened URLs
 
 
-## REQUIREMENTS/GOALS
+## 2. REQUIREMENTS/GOALS
 
 ### Functional Requirements
 
@@ -28,33 +28,41 @@
 - REST APIs (which can be used by others)
 
 
-## CAPACITY ESTIMATIONS
+## 3. CAPACITY ESTIMATIONS
 
-This is a ready heavy service, lets assume **100:1 read-write ratio**
+- This is a ready heavy service
+- Lets assume **100:1 read-write ratio**
 
-- **Traffic Estimates :** Let's say we get 500M new URLs per month. Thus the reads for this would be 50B
+### Traffic Estimates
+
+- Let's say we get 500M new URLs per month. Thus the reads for this would be 50B
 ```
-READS (PM) = 500M
-WRITES (PM) = 500M * 100 = 50B
+WRITES (PM) = 500M
+READS (PM) = 500M * 100 = 50B
 
-QPS (WRITE) = 500M/(30*24*60 *60)  = 200
+QPS (WRITE) = 500M/(30*24*60*60)  = 200
 QPS (READ) = QPS (WRITE) * 100 = 20K
 ```    
 
-- **Storage Estimations :** Let's assume we will store the data for 5 years, and assumming each URL takes 500 bytes of space
+
+### Storage Estimations
+- Let's assume we will store the data for 5 years, and assumming each URL takes 500 bytes of space
 
 ```
 URLS TO STORE = 500M * 12 * 5 = 30B
 DATA TO STORE = 30B * 500 bytes = 15TB
 ```
 
-- **Bandwidth Estimations**
+### Bandwidth Estimations
+
 ```
 WRITE = 200 URL/second * 500 bytes = 100 KB/s
 READ = 20K URL/second * 500 bytes = 10 MB/s
 ``` 
 
-- **Memory Estimations :** We would need to cache some hot URLs. Lets assume the 80-20 rule. (80% traffic comes from 20% URL).
+### Memory Estimations
+
+- We would need to cache some hot URLs. Lets assume the 80-20 rule. (80% traffic comes from 20% URL).
 Let's assume we want to refresh the cache daily
 ```
 URLs read per day = 20K * 60 * 60 * 24 = 1.7B
@@ -64,7 +72,7 @@ Memory Required = 0.2 * 1.7B * 500 bytes = 170GB
 ```
 Note: There will be duplicate requests as well, so the actual usage will be less than 170GB always
 
-- **High level Estimations**
+### High level Estimations
 
 |                      |            |
 | -------------------- | ---------- |
@@ -77,24 +85,34 @@ Note: There will be duplicate requests as well, so the actual usage will be less
 
 
 
-## SYSTEM APIs
+## 4. SYSTEM APIs
 
 ### CreateUrl
+
+```
+createUrl(dev_key, original_url, expiration_date, custom_alias, user_id)
+```
+
 - Parameters
   - `dev_key`: Represents the registered account, can be used for limiting requests
-  - `url`: Original URL that needs to be shortened
+  - `original_url`: Original URL that needs to be shortened
   - `expiration_date`: Optional
   - `custom_alias`: Optional 
   - `user_id`: Optional
 - Returns: a new short URL or an error msg.
 
 ### DeleteUrl
+
+```
+deleteUrl(dev_key, url_key)
+```
+
 - Parameters
     - `dev_key`
     - `url_key`: The short URL that needs to be deleted
 
 
-## DATABASE DESIGN
+## 5. DATABASE DESIGN
 
 ### Key Observations
 
@@ -120,7 +138,7 @@ Note: There will be duplicate requests as well, so the actual usage will be less
 ***Since we have billion of rows with no relationship, NoSQL (DynamoDB, Cassandra, etc) is a better choice***
 
 
-## System Design and Algorithm
+## 6. SYSTEM DESIGN & ALGORITHM
 Main focus: Generating a unique key for every URL. Let's consider 2 approaches:
 
 ### 1. Encoding the original URL
@@ -157,7 +175,7 @@ Main focus: Generating a unique key for every URL. Let's consider 2 approaches:
 ### 2. Generating keys offline 
 
 - We can have an independent key generating service (KGS)
-- This will have a pre-generated set of random six letter strings stored in a DB (let's call it *KEY-DB*)
+- This service will have a pre-generated set of random six letter strings stored in a DB (let's call it *KEY-DB*)
 - It's easy and fast as we are not encoding anything, and no duplications here
 - We will mark the key used if it is used in url generation
 - But what if 2 or more sever try to use a key at the same time?
@@ -174,7 +192,7 @@ Main focus: Generating a unique key for every URL. Let's consider 2 approaches:
 
 <img src="./Resources/1-4.png">
 
-## Data Partitioning and Replication
+## 7. DATA PARTITIONING AND REPLICATION
 
 - As we have billions of rows, we need a partition scheme to scale the DB
 - **Range based partitioning**:
@@ -189,7 +207,7 @@ Main focus: Generating a unique key for every URL. Let's consider 2 approaches:
     - This still can lead to overloaded partitions which can be solved by consistent hashing
 
 
-## Cache
+## 8. CACHE
 - We can use off-the-shelf solutions like Memcache to store hot URLs
 - The application servers, before hitting backend storage, can quickly check if the cache has the desired URL.
 - As estimated above, we will need about 170GB memory which we may adjust on further analytics on the usage
@@ -199,7 +217,7 @@ Main focus: Generating a unique key for every URL. Let's consider 2 approaches:
 
 <img src="./Resources/1-2.png">
 
-## Load Balancer
+## 9. LOAD BALANCER
 - Can add the following LBs:
     - B/W Client and Application server
     - B/W Application server and DB server
@@ -209,7 +227,7 @@ Main focus: Generating a unique key for every URL. Let's consider 2 approaches:
 - This might overload an already loaded server, wer can re-adjust the policy then depending on the load upon the servers.
 
 
-## Purging or DB cleanup
+## 10. PURGING OR DB CLEANUP
 - We can do a lazy cleanup to reduce pressure on the DB
 - Only expired links to be deleted
 - Whenever user tries to access a expired link, we can delete that and raise 404
@@ -219,12 +237,12 @@ Main focus: Generating a unique key for every URL. Let's consider 2 approaches:
 
 <img src="./Resources/1-3.png">
 
-## Telemetry
+## 11. TELEMETRY
 - How many times a short URL has been used?
 - User locations?
 - Platform/browser used
 
-## Security and Permissions
+## 12. SECURITY & PERMISSIONS
 - Can users create private URLs?
 - Can store public/private type in the URLs with the user-id
 - If no permssion to access, raise 401
