@@ -168,8 +168,35 @@ USER_ID_1 (4 bytes) + USER_ID_2 (4 bytes) = 8 bytes
 - We extend this service and use this service to generate IDs for everywhere in the system like User, photo, etc.
 - Alternatively, we can go with the KGS (Key generation service) that we discussed in [TinyURL](https://github.com/annubv/system-design/blob/main/HLD/1-TinyURL.md#2-generating-keys-offline).
 
+
 ## 11. RANKING AND NEWS FEED GENERATION
+- To create news feed, we need to fetch top most popular and relevant photos for a user.
+- For simplicity, let's assume we fetch top 100 photos for a user's news feed.
+- For this, we will need to fetch all the users that the user follow
+- Then fetch the metadata of the latest 100 photos from these users
+- Then we can pass these photos to our ranking algorithm which will rank these posts on basis of recency, likeness, etc
+- Finally we can return these posts to the user
+- But this would require a lot of time because of heavy querying, merging, sorting of data
+- To tackle this, we can pre generate a news feed and store it in a table UserNewsFeed
+- We will have a dedicated server which will keep generating these news feeds.
+- There can be different approaches for sending this news feed to the user:
+    - **Pull** - Clients can manually fetch latest news feed whenever needed. But the news feed won't be updated unless the do so. Also, most of the time users will get empty response
+    - **Push** - Servers can push feed whenever there is an update. For this, client would need to maintain a **long polling** request. Possibly issue with this is if a user follows a lot people, there would be very frequent updates
+    - **Hybrid** - We can use pulls for users who have a lot follows and push for other kind of users. Another approach would be to have a push model but not updating it more than a specific frequency per user
+
 
 ## 12. NEWS FEED WITH SHARDED DATA
+- For our news feed generation, we need to fetch the photos from all the users a user follow
+- We also need to sort the data coming through different shards by creation time
+- To make this faster we can append the creation time epoch to the ID of the photo, as our photoid is already indexed this would make our queries faster
+- Thus our photo id will contain an epoch of creation time, and a randomly generated id from our KGS
+
 
 ## 13. CACHE AND LOAD BALANCING
+
+- Our service would need a massive-scale photo delivery system to serve globally distributed users
+- Our service should push its content to the user through a large number of geographically distibuted photo cache server and use CDNs
+- For metadata servers, we can use memcache to cache hot rows and check if the data is there before hitting up the database
+- We can use LRU for cache eviction
+- We can follow the 80-20 rule which states that 20% of
+daily read volume for photos is generating 80% of traffic. We can thus try caching 20% of daily photos and metadata.
