@@ -143,6 +143,31 @@ USER_ID_1 (4 bytes) + USER_ID_2 (4 bytes) = 8 bytes
 
 ## 10. DATA SHARDING 
 
+### Partitioning based on UserIds
+
+- By this we will be able to store a particular user's data on a single shard
+- Considering we have 3.7TB storage requirement and assuming each shard will be of 1TB, we will need at least 4 shards
+- Let's assume we go with having 10 shards. with each shard numbered from 0 - 9
+- Each user id would be unique, we can identify its shard number by its last characted, or by getting `user_id % 10`
+- Thus user `14145` will have its data in shard 5, user `34133` will have its data in shard 3, and so on.
+- To identify in which shard the photo is stored in, we can append the shard id in every photo id. So every photo id of user `14145` will have `5` appended at the last of its id.
+- This approach would make it harder to handle hot users
+- Some users may upload a lot of data, let's say users in shard 3, this will result in non uniform distribution of storage
+- What happens when users in shard 3 as a result of upoading lot of photos fill up their storage? We will have to change our distribution pattern
+- If one of the shard goes down, we won't be able to access all the photos of a particular user whose data is in that shard
+
+
+## Partitioning based on PhotoIds
+
+- We can generate a unique photo id first then decide in which shard it will go in.
+- We can apply the same logic for getting shard id `photo_id % 10`.
+- For this we need a service to generate unique photo IDs
+- Whenever we need a ID, we can use that service, it will generate a new id, store it in the DB and pass it on.
+- This will be a single point of failure, for this we can have two separate services.
+- One will generate unique odd keys, other will generate even keys, we can add a round robin load balancer in front of these services
+- We extend this service and use this service to generate IDs for everywhere in the system like User, photo, etc.
+- Alternatively, we can go with the KGS (Key generation service) that we discussed in [TinyURL](https://github.com/annubv/system-design/blob/main/HLD/1-TinyURL.md#2-generating-keys-offline).
+
 ## 11. RANKING AND NEWS FEED GENERATION
 
 ## 12. NEWS FEED WITH SHARDED DATA
