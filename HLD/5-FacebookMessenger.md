@@ -64,3 +64,45 @@
 
 
 ## 5. DETAILED COMPONENT DESIGN
+- We need a server which would handle the following:
+    - Deliver outgoing msgs, Receive incoming msgs
+    - Store and retrieve msgs from DB
+    - keep track of offline/online status of users
+
+### 5.1 Messages Handling
+- The user would connect to server to send the msg
+- The server has two ways to deliver the msg
+    - clients can periodically **pull** new msgs from the server
+    - or, the server can **push** the msg as soon as it comes through an open connection
+
+- PULL method:
+    - Server would need to keep a track of all the msgs that still needs to be delivered
+    - There would be latency in msgs delivery if clients ask for msgs periodically
+    - If we make calls frequently, it would decrease the latency but there will be a lot of empty responses, wasting resources
+
+- PUSH method:
+    - We will have an active connection
+    - Low latency as the msgs will be pushed to clients as soon as it is sent
+    - No need to keep a track of undelivered msgs
+    - Can do this by long-polling or websockets
+    - We would have a hash table with key as user_id and value as connection object, when a msg needs to be transfered to a user, we will find the connection through this table
+
+- If server receives a msg and the user is offline, it can notify the server about failed delivery, then the client can retry. We can implement retries at server level too
+
+- If we `500M` active users at any time, if a server can hold `50K` concurrent connections, we would need `10K` servers
+
+- Following steps takes place in delivery:
+    - The user sends a request to send a msg
+    - There will load balancers in front of chat servers
+    - Load balancer will pass the request to the user mapped chat server
+    - This chat server will find the server maintaining the connection with the receipent user
+    - Chat server will pass the request to that server, storing the msg in the db in the background
+
+
+- There will be senarios when msg sequence for two users would be different in their chat
+- Keep a sequence number with every msg for each client
+- This will keep ensure that atleast the ordering is same for all his/her devices
+
+### 5.2 Storing and Retrieving the messages from DB
+
+### 5.3 Managing user status
