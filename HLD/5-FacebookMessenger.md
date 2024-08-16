@@ -104,5 +104,21 @@
 - This will keep ensure that atleast the ordering is same for all his/her devices
 
 ### 5.2 Storing and Retrieving the messages from DB
+- We have two options:
+    - Create a seprate thread and work with DB
+    - Send an async call to the DB
+- Things to keep in mind:
+    - Efficiently work with the DB connection pool
+    - How to handle retiries
+    - How to handle logging of msgs which fail even after certain retires
+    - How to retry logged msgs once the errors are fixed
+- Since we need to store a small amount of data very frequently and fetch range of records quickly
+    - Working with MySQL is inefficient
+    - Wide column DB (Like HBase) solves both problem
+    - HBase is a key val no sql db, modeled after BigTable
+    - Stores multiple columns against a key
+    - Groups new data together in a memory buffer and dumps in the disk when memory fills up
+    - Can be used to fetch rows by keys and get range of data
+    
 
 ### 5.3 Managing user status
