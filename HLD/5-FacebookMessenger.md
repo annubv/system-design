@@ -122,3 +122,39 @@
     
 
 ### 5.3 Managing user status
+- We can get the status by the connection we are maintaining for each user
+- When a user comes online, the client can fetch the status of all the friends
+- Can periodically fetch the status of the users currently in viewport
+- If a msg delivery fails, we can update the status to offline
+- When a user comes online, we can broadcast the status with a delay to see if the user doesn't go offline immediately
+- We can fetch the the user status whenever a new chat starts
+
+
+## 6. DATA PARTITIONING AND REPLICATION
+- We can make shards on the basis of user_id
+- Msg of one user will remain in a single shard
+- If a shard is of 4TB, we would require 3.6PB/4TB = 1000 shards
+- we can have a hash function which will give shard id of the a user by hash(user_id)%1000
+- By doing this, we can access a user chat pretty fast
+- We can add more physical servers according to the need
+- We need to replicate msgs to different servers so that recovery is possible in a crash
+
+## 7. CACHE
+- We can cache a few messages (last 15) for recent conversations which are visible in client viewport (lets say 5)
+- Cache for a user will recide in a single machine
+
+## 8. LOAD BALANCING
+- We need load balancers in front of our chat servers
+- They will map each user_id to a server that holds the connection for that user
+- Similarly we need load balancer for our cache servers
+
+## 9. EXTENDED REQUIREMENTS
+- Group Chats
+    - Can be identified by group_id
+    - This group_id can be used to identify the group in which we will have all the user_ids in that group
+    - We can iterate over those user_ids to get the servers holding the connections
+    - We can partition db based on group_id in a separate table
+- Push notifications
+    - This will enable us to send msgs to offline users
+    - We will have a separate notification server which will send msg to client's push notification server
+    - The client notify server will then send the msg to the actual device
