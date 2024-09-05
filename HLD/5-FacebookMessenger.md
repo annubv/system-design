@@ -130,6 +130,9 @@
 - We can fetch the the user status whenever a new chat starts
 
 
+
+<img src="./Resources/5-2.png">
+
 ## 6. DATA PARTITIONING AND REPLICATION
 - We can make shards on the basis of user_id
 - Msg of one user will remain in a single shard

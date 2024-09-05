@@ -130,6 +130,7 @@
 - We can use 80-20 rule for intelligent caching
 - We can cache latest data as it has high chances of being consumed
 
+<img src="./Resources/6-1.png">
 
 ## 9. TIMELINE GENERATION
 
