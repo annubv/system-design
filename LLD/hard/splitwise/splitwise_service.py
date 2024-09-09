@@ -12,19 +12,20 @@ class SplitwiseService:
     _transaction_count = 0
     _transaction_prefix = "TXN"
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance.users: Dict[str, User] = {}  # type: ignore
-            cls._instance.groups: Dict[str, Group] = {}  # type: ignore
-            cls._instance.transactions: List[Transaction] = []  # type: ignore
-        return cls._instance
+    def __init__(self):
+        if SplitwiseService._instance is not None:
+            raise Exception("This is a singleton")
+        else:
+            SplitwiseService._instance = self
+            self.users: Dict[str, User] = {}
+            self.groups: Dict[str, Group] = {}
+            self.transactions: List[Transaction] = []
 
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+    @staticmethod
+    def get_instance():
+        if SplitwiseService._instance is None:
+            SplitwiseService()
+        return SplitwiseService._instance
 
     def add_user(self, user: User):
         self.users[user.get_user_id()] = user
