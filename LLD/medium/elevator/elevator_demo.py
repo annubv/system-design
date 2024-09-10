@@ -7,9 +7,13 @@ class ElevatorSystemDemo:
     @staticmethod
     def run():
         controller = ElevatorController(3, 5)
-        controller.request_elevator(5, 10)
-        controller.request_elevator(3, 7)
-        controller.request_elevator(8, 2)
+        time.sleep(3)
+        controller.request_elevator(10, 12)
+        time.sleep(3)
+        controller.request_elevator(1, 7)
+        time.sleep(3)
+        controller.request_elevator(2, 5)
+        time.sleep(3)
         controller.request_elevator(1, 9)
 
         # Keep the main thread running

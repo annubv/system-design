@@ -29,11 +29,8 @@ class Elevator:
 
     def process_requests(self):
         while True:
-            with self.lock:
-                while self.requests:
-                    request = self.get_next_request()
-                    self.process_request(request)
-                self.condition.wait()
+            request = self.get_next_request()  # This will wait until there's a request
+            self.process_request(request)
 
     def process_request(self, request: Request):
         start_floor = self.current_floor
