@@ -1,0 +1,3 @@
+class Constants:
+    MAX_BIDS_ALLOWED_PER_USER = 5
+    MAX_WINNERS_TO_DISPLAY = 5
