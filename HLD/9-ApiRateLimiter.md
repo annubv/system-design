@@ -1,5 +1,23 @@
 # API Rate Limiter
 
+## Discuss usages
+- Prevents DDOS
+- Reduce costs
+- Prevents overloads
+
+
+## Requirements
+- Accurately limit requests
+- Low latency
+- Use little memory
+- Distributed rate limiting
+- Fault tolerance
+
+## Where to put
+- Client
+- Server
+- B/W Client, server usually at api gateway
+
 ## Algos:
 1. Token Bucket
 2. Leaking Bucket
@@ -74,6 +92,42 @@
 
 
 ### Design
+
+- Rate limiting rules
+
+```
+domain: msgs
+descriptiors:
+ - key: msg_type
+ - value: marketing
+ - rate_limit:
+    unit: day
+    req_per_unit: 10
+
+```
+
+- For client, send details in headers about rate limiting
+
+<img src="./Resources/9-1.png">
+
+
+
+- Distributed Envs:
+    - Race Condition: When two concurrent req are trying to update same value in the cache
+        - Can use locks -> slow down the system
+        - Lua Script and Sorted sets can be used
+    - Sync Issue: When we have multiple rate limiters running
+        - Can use shared redis        
+
+
+- Performance optimisations:
+    - Multi data center
+    - Use eventual consistency
+
+- Monitoring
+    - Check rate limiting algo is effective
+    - Rules are effective
+
 
 - If we have api gateway, we can apply rate limited there, else at the application level
 - For distributed rate limiters, have a common store in redis
