@@ -18,4 +18,4 @@ Plug into other services for notifications
 - Many clients
 
 
-<img src="./Resources/19-1.png">
+<img src="./Resources/19-1.jpg">
